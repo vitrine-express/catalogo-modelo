@@ -6,8 +6,7 @@
   <title>Catálogo Online</title>
   <style>
     :root {
-      --primary: #14532d;       /* Cor principal (alterada via CONFIG) */
-      --primary-hover: #0f3f22;
+      --primary: #14532d;
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --text: #1e293b;
@@ -31,7 +30,7 @@
       padding-bottom: 40px;
     }
 
-    /* Cabeçalho */
+    /* Cabeçalho da Loja */
     header {
       background-color: var(--primary);
       color: #ffffff;
@@ -69,8 +68,8 @@
       background-color: rgba(255, 255, 255, 0.28);
     }
 
-    /* Aviso de Modo Demo */
-    .demo-banner {
+    /* Aviso caso o link CSV ainda não tenha sido colado */
+    .setup-banner {
       background-color: #fef3c7;
       color: #92400e;
       text-align: center;
@@ -169,7 +168,6 @@
       opacity: 0.72;
     }
 
-    /* Caixa Quadrada 1:1 com foco centralizado */
     .card-img-wrap {
       position: relative;
       width: 100%;
@@ -282,6 +280,7 @@
       font-weight: 600;
       cursor: not-allowed;
     }
+
     .status-msg {
       text-align: center;
       padding: 40px 16px;
@@ -292,6 +291,7 @@
     footer {
       text-align: center;
       margin-top: 40px;
+      padding: 0 16px;
       font-size: 0.8rem;
       color: var(--muted);
     }
@@ -299,8 +299,8 @@
 </head>
 <body>
 
-  <div id="demoBanner" class="demo-banner">
-    Modo Demonstração: exibindo itens de exemplo. Cole o link CSV da Planilha Google no código para ativar.
+  <div id="setupBanner" class="setup-banner">
+    Aviso de configuração: cole o link CSV da Planilha Google do cliente no bloco CONFIG para carregar os produtos reais.
   </div>
 
   <header>
@@ -331,46 +331,30 @@
     // CONFIGURAÇÃO DO CLIENTE (EDITE APENAS ESTAS 5 LINHAS PARA CADA LOJA)
     // =========================================================================
     const CONFIG = {
-      nomeLoja: "Casa Agro & Campo (Modelo)",
-      subtitulo: "Rações, ferramentas e insumos com entrega rápida na região",
-      whatsapp: "5562999999999", // DDI (55) + DDD + Número (somente números)
-      corPrincipal: "#14532d",   // Ex: #14532d (verde), #0f3d5e (azul), #881337 (vinho)
-      linkPlanilhaCSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDl3VXRi4CKn2L9k9NAkZLgWWs28ojy5_PC_ZPsB7eQ_Tp7wKjONsrT47mI2zK1Ry36XsdmngxYm4E/pub?gid=0&single=true&output=csv"
+      nomeLoja: "Nome da Loja do Cliente",
+      subtitulo: "Descrição curta, horário de atendimento ou região de entrega",
+      whatsapp: "5562999999999",
+      corPrincipal: "#14532d",
+      linkPlanilhaCSV: "COLE_AQUI_O_LINK_CSV_DA_PLANILHA"
     };
     // =========================================================================
 
-    // Produtos de exemplo caso o link CSV ainda não tenha sido configurado
-    const DEMO_DATA = [
+    // Itens de exemplo exibidos apenas enquanto o link CSV não for colado
+    const FALLBACK_DATA = [
       {
-        categoria: "Rações",
-        produto: "Ração Premium Cães Adultos 15kg",
-        descricao: "Alta digestibilidade, sabor carne e vegetais, pacote fechado.",
-        preco: "119,90",
-        foto: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=600&q=80",
+        categoria: "Categoria 1",
+        produto: "Produto Exemplo 01",
+        descricao: "Descrição breve do produto, tamanhos, medidas ou detalhes importantes.",
+        preco: "89,90",
+        foto: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80",
         status: "Disponível"
       },
       {
-        categoria: "Ferramentas",
-        produto: "Pulverizador Costal Manual 20L",
-        descricao: "Tanque reforçado com bico regulável e trava contínua.",
-        preco: "185,00",
-        foto: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80",
-        status: "Disponível"
-      },
-      {
-        categoria: "Jardim & Horta",
-        produto: "Substrato Orgânico Vegetal 10kg",
-        descricao: "Pronto para uso em vasos, canteiros e mudas.",
-        preco: "32,50",
-        foto: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=600&q=80",
-        status: "Disponível"
-      },
-      {
-        categoria: "Acessórios",
-        produto: "Kit Jardinagem 3 Peças Aço",
-        descricao: "Pá larga, pazinha estreita e ancinho com cabo ergonômico.",
-        preco: "48,00",
-        foto: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=600&q=80",
+        categoria: "Categoria 2",
+        produto: "Produto Exemplo 02",
+        descricao: "Segundo item de teste para visualizar o layout antes de conectar a planilha.",
+        preco: "149,00",
+        foto: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80",
         status: "Esgotado"
       }
     ];
@@ -378,21 +362,32 @@
     let allProducts = [];
     let selectedCategory = "Todos";
 
-    // Aplica configurações visuais iniciais
+    // Limpa o número e garante o DDI 55 caso seja digitado apenas DDD + número
+    function getCleanPhone() {
+      const digits = CONFIG.whatsapp.replace(/\D/g, "");
+      if (digits.length === 10 || digits.length === 11) {
+        return "55" + digits;
+      }
+      return digits;
+    }
+
+    // Aplica identidade visual e link do cabeçalho
     function initBranding() {
       document.documentElement.style.setProperty("--primary", CONFIG.corPrincipal);
-      document.title = CONFIG.nomeLoja + " — Catálogo Online";
+      document.title = `${CONFIG.nomeLoja} — Catálogo Online`;
       document.getElementById("storeName").textContent = CONFIG.nomeLoja;
       document.getElementById("storeSubtitle").textContent = CONFIG.subtitulo;
 
-      const cleanPhone = CONFIG.whatsapp.replace(/\D/g, "");
-      const defaultMsg = encodeURIComponent(`Olá! Vim pelo catálogo online da *${CONFIG.nomeLoja}* e gostaria de tirar uma dúvida.`);
+      const cleanPhone = getCleanPhone();
+      const defaultMsg = encodeURIComponent(
+        `Olá! Vim pelo catálogo online da *${CONFIG.nomeLoja}* e gostaria de tirar uma dúvida.`
+      );
       document.getElementById("headerWhatsLink").href = `https://wa.me/${cleanPhone}?text=${defaultMsg}`;
     }
 
-    // Parser CSV seguro (suporta vírgulas nos preços brasileiros e acentos)
+    // Parser CSV seguro (suporta vírgulas em preços, aspas, quebras de linha e acentos)
     function parseCSV(text) {
-      const cleanText = text.replace(/^\uFEFF/, ""); // Remove BOM do Google Sheets
+      const cleanText = text.replace(/^\uFEFF/, "");
       const rows = [];
       let row = [];
       let cell = "";
@@ -430,7 +425,6 @@
 
       if (rows.length < 2) return [];
 
-      // Normaliza cabeçalhos (ignora maiúsculas e acentos)
       const normalize = str => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const headers = rows[0].map(normalize);
 
@@ -450,7 +444,6 @@
       });
     }
 
-    // Formata o preço para exibição limpa
     function formatPrice(rawPrice) {
       const cleaned = rawPrice.replace(/R\$\s?/gi, "").trim();
       if (!cleaned) return "Sob consulta";
@@ -460,7 +453,6 @@
       return rawPrice;
     }
 
-    // Monta os botões de categoria dinamicamente
     function renderCategories() {
       const catBar = document.getElementById("categoryBar");
       const uniqueCats = ["Todos", ...new Set(allProducts.map(p => p.categoria).filter(Boolean))];
@@ -478,7 +470,6 @@
       renderProducts();
     }
 
-    // Renderiza os cards filtrados na tela
     function renderProducts() {
       const grid = document.getElementById("productGrid");
       const statusMsg = document.getElementById("statusMessage");
@@ -500,14 +491,15 @@
       }
 
       statusMsg.style.display = "none";
-      const cleanPhone = CONFIG.whatsapp.replace(/\D/g, "");
+      const cleanPhone = getCleanPhone();
       const placeholderImg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'><rect width='400' height='400' fill='%23f1f5f9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='18' fill='%2394a3b8'>Sem foto</text></svg>";
 
       grid.innerHTML = filtered.map(item => {
         const isOut = item.status.toLowerCase().includes("esgotado") || item.status.toLowerCase().includes("indispon");
         const priceDisplay = formatPrice(item.preco);
+
         const whatsText = encodeURIComponent(
-          `Olá! Vi no catálogo online e tenho interesse em:\n\n*${item.produto}*\nValor: ${priceDisplay}\n\nAinda está disponível?`
+          `Olá! Vi no catálogo online da *${CONFIG.nomeLoja}* e tenho interesse em:\n\n*${item.produto}*\nValor: ${priceDisplay}\n\nAinda está disponível?`
         );
         const whatsUrl = `https://wa.me/${cleanPhone}?text=${whatsText}`;
 
@@ -535,21 +527,19 @@
       }).join("");
     }
 
-    // Carrega os dados da Planilha Google
     async function loadCatalog() {
       initBranding();
       const statusMsg = document.getElementById("statusMessage");
 
       if (!CONFIG.linkPlanilhaCSV || CONFIG.linkPlanilhaCSV.includes("COLE_AQUI")) {
-        document.getElementById("demoBanner").style.display = "block";
-        allProducts = DEMO_DATA;
+        document.getElementById("setupBanner").style.display = "block";
+        allProducts = FALLBACK_DATA;
         renderCategories();
         renderProducts();
         return;
       }
 
       try {
-        // Adiciona timestamp para evitar cache antigo no navegador
         const separator = CONFIG.linkPlanilhaCSV.includes("?") ? "&" : "?";
         const response = await fetch(`${CONFIG.linkPlanilhaCSV}${separator}t=${Date.now()}`);
         if (!response.ok) throw new Error("Falha ao acessar planilha.");
